@@ -8,5 +8,16 @@ app.get("/",(req,res)=>{
     res.status(200).json({msg:"Success from api"})
 })
 app.listen( ENV.PORT,()=>{
-    console.log("server running on,http://localhost:",ENV.PORT);
+    console.log("server running on http://localhost:",ENV.PORT);
 })
+
+const startServer = async ()=>{
+    try{
+        await connectDB();
+        app.listen(ENV.PORT,()=>{
+            console.log("Server is running on port:",ENV.PORT)
+        })
+    }catch(error){
+        console.error("Error starting the server",error);
+    }
+}
