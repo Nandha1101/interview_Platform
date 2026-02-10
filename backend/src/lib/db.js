@@ -1,18 +1,11 @@
-import mongoose from "mongoose"
+import mongoose from "mongoose";
 
-import {ENV} from "./env.js"
-
-export const connectDB = async() =>{
-    try{
-        const conn = await mongoose.connect(ENV.DB_URL)
-        console.log("Connected to MongoDb:",conn.connection.host)
-    }catch(error){
-        console.error("Error while connecting to mongodb",error);
-        process.exit(1)
-    }
-}
-app.listen(ENV.PORT,() =>{
-    console.log("Server is running on port:",ENV.PORT)
-    connectDB();
-});
-
+export const connectDB = async () => {
+  try {
+    await mongoose.connect(process.env.MONGO_URI);
+    console.log("MongoDB connected");
+  } catch (error) {
+    console.error("DB connection failed", error);
+    process.exit(1);
+  }
+};
