@@ -1,4 +1,4 @@
-import mongoose from "momgoose"
+import mongoose from "mongoose"
 
 import {ENV} from "./env.js"
 
