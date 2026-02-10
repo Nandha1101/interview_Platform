@@ -12,3 +12,7 @@ export const ENV = {
     CLERK_SECRET_KEY:process.env.CLERK_SECRET_KEY,
     CLIENT_URL:process.env.CLIENT_URL
 }
+
+if (!ENV.DB_URL) {
+  throw new Error("DB_URL is not defined in environment variables");
+}
