@@ -7,7 +7,8 @@ import { clerkMiddleware } from '@clerk/express'
 import { connectDB } from "./lib/db.js";
 import { inngest, functions } from "./lib/inngest.js";
 import { ENV } from "./lib/env.js";
-import chatRoutes from "./routes/chatRoutes.js"
+import chatRoutes from "./routes/chatRoutes.js";
+import sessionRoutes from "./routes/sessionRoute.js";
 
 const app = express();
 
@@ -24,6 +25,7 @@ app.use(
   serve({ client: inngest, functions })
 );
 app.use("/api/chat",chatRoutes)
+app.use("/api/sessions",sessionRoutes)
 
 // Test route
 app.get("/", (req, res) => {
