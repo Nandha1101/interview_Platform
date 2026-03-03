@@ -9,16 +9,18 @@ import { inngest, functions } from "./lib/inngest.js";
 import { ENV } from "./lib/env.js";
 import chatRoutes from "./routes/chatRoutes.js";
 import sessionRoutes from "./routes/sessionRoute.js";
-
+import executeRoute from "./routes/executeRoute.js";
 const app = express();
 
 app.use(express.json());
 app.use(cors({
-  origin: ENV.CLIENT_URL,
+  origin: process.env.CLIENT_URL || 'http://localhost:5173',
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true
 }));
 app.use(clerkMiddleware()); //this adds auth field to request object
 
+app.use("/api/execute", executeRoute);
 // Inngest endpoint
 app.use(
   "/api/inngest",
