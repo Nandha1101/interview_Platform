@@ -51,7 +51,7 @@ app.use((req, res, next) => {
 });
 
 // Serve React app for unknown routes
-const path = require('path');
+import path from 'path';
 app.use(express.static(path.join(__dirname, '../../frontend/dist')));
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../../frontend/dist/index.html'));
