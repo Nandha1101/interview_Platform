@@ -16,6 +16,7 @@ app.use(express.json());
 app.use(cors({
   origin: (origin, callback) => {
     const allowedOrigins = [
+      'https://interview-platform-five-fawn.vercel.app',
       'https://coding-platform-ui-mu.vercel.app',
       'http://localhost:5173',
       'http://localhost:3000',
