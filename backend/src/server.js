@@ -10,6 +10,7 @@ import { ENV } from "./lib/env.js";
 import chatRoutes from "./routes/chatRoutes.js";
 import sessionRoutes from "./routes/sessionRoute.js";
 import executeRoute from "./routes/executeRoute.js";
+import path from 'path';
 const app = express();
 
 app.use(express.json());
@@ -43,12 +44,19 @@ app.use(
 app.use("/api/chat",chatRoutes)
 app.use("/api/sessions",sessionRoutes)
 
+// Serve static files from the frontend build folder
+const __dirname = path.resolve();
+app.use(express.static(path.join(__dirname, '../frontend/public')));
+
+// Fallback route for React Router
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../frontend/public/index.html'));
+});
+
 // Test route
 app.get("/", (req, res) => {
   res.status(200).json({ msg: "Success from api" });
 });
-
-
 
 // ✅ SINGLE server start
 const PORT = process.env.PORT || ENV.PORT || 3000;
