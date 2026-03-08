@@ -18,9 +18,6 @@ app.use(cors({
   origin: (origin, callback) => {
     const allowedOrigins = [
       process.env.CLIENT_URL, // Dynamically load CLIENT_URL from .env
-      'https://interview-platform-git-main-nandhakishor507-4064s-projects.vercel.app',
-      'https://interview-platform-oekeh11ag-nandhakishor507-4064s-projects.vercel.app',
-      'https://interview-platform-five-fawn.vercel.app',
       'http://localhost:5173',
       'http://localhost:3000',
     ];
@@ -51,6 +48,13 @@ app.use(express.static(path.join(__dirname, '../frontend/public')));
 // Replace the wildcard route with app.use()
 app.use((req, res, next) => {
   res.sendFile(path.join(__dirname, '../frontend/public/index.html'));
+});
+
+// Serve React app for unknown routes
+const path = require('path');
+app.use(express.static(path.join(__dirname, '../../frontend/dist')));
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../../frontend/dist/index.html'));
 });
 
 // Test route
