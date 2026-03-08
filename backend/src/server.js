@@ -48,8 +48,8 @@ app.use("/api/sessions",sessionRoutes)
 const __dirname = path.resolve();
 app.use(express.static(path.join(__dirname, '../frontend/public')));
 
-// Fallback route for React Router
-app.get('*', (req, res) => {
+// Replace the wildcard route with app.use()
+app.use((req, res, next) => {
   res.sendFile(path.join(__dirname, '../frontend/public/index.html'));
 });
 
