@@ -16,8 +16,10 @@ app.use(express.json());
 app.use(cors({
   origin: (origin, callback) => {
     const allowedOrigins = [
+      process.env.CLIENT_URL, // Dynamically load CLIENT_URL from .env
+      'https://interview-platform-git-main-nandhakishor507-4064s-projects.vercel.app',
+      'https://interview-platform-oekeh11ag-nandhakishor507-4064s-projects.vercel.app',
       'https://interview-platform-five-fawn.vercel.app',
-      'https://coding-platform-ui-mu.vercel.app',
       'http://localhost:5173',
       'http://localhost:3000',
     ];
