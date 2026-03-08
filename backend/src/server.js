@@ -52,6 +52,19 @@ app.use(
 app.use("/api/chat",chatRoutes)
 app.use("/api/sessions",sessionRoutes)
 
+// Serve static files from the frontend build folder
+app.use(express.static(path.join(__dirname, '../../frontend/dist')));
+
+// Serve React app for unknown routes (SPA routing) - use regex to avoid path-to-regexp issues
+app.get(/^(?!\/api\/).*$/, (req, res) => {
+  res.sendFile(path.join(__dirname, '../../frontend/dist/index.html'), (err) => {
+    if (err) {
+      console.error('Error sending index.html:', err);
+      res.status(500).send('Error loading application');
+    }
+  });
+});
+
 // ✅ SINGLE server start
 const PORT = process.env.PORT || ENV.PORT || 3000;
 
