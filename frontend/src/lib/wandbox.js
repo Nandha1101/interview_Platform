@@ -1,4 +1,5 @@
 //const WANDBOX_API = "http://localhost:3000/api";
+import axiosInstance from "./axios.js";
 
 const LANGUAGE_VERSIONS = {
   javascript: { compiler: "nodejs-20.17.0" },
@@ -18,27 +19,13 @@ export async function executeCode(language, code) {
       };
     }
 
-    const response = await fetch(`${import.meta.env.VITE_API_URL}/execute`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        compiler: languageConfig.compiler,
-        code: code,
-        filename: `main.${getFileExtension(language)}`,
-      }),
+    const response = await axiosInstance.post(`/api/execute`, {
+      compiler: languageConfig.compiler,
+      code: code,
+      filename: `main.${getFileExtension(language)}`,
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      return {
-        success: false,
-        error: `HTTP error! status: ${response.status} - ${errorText}`,
-      };
-    }
-
-    const data = await response.json();
+    const data = response.data;
 
     if (data.compiler_error) {
       return {
@@ -63,7 +50,7 @@ export async function executeCode(language, code) {
   } catch (error) {
     return {
       success: false,
-      error: `Failed to execute code: ${error.message}`,
+      error: `Failed to execute code: ${error.response?.data?.message || error.message}`,
     };
   }
 }
@@ -73,6 +60,7 @@ function getFileExtension(language) {
     javascript: "js",
     python: "py",
     java: "java",
+    cpp: "cpp",
   };
 
   return extensions[language] || "txt";
