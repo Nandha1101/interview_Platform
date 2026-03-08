@@ -11,7 +11,13 @@ import chatRoutes from "./routes/chatRoutes.js";
 import sessionRoutes from "./routes/sessionRoute.js";
 import executeRoute from "./routes/executeRoute.js";
 import path from 'path';
+import { fileURLToPath } from 'url';
+
 const app = express();
+
+// Fix __dirname for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 app.use(express.json());
 app.use(cors({
@@ -32,6 +38,11 @@ app.use(cors({
 }));
 app.use(clerkMiddleware()); //this adds auth field to request object
 
+// Test route
+app.get("/api", (req, res) => {
+  res.status(200).json({ msg: "Success from api" });
+});
+
 app.use("/api/execute", executeRoute);
 // Inngest endpoint
 app.use(
@@ -40,25 +51,6 @@ app.use(
 );
 app.use("/api/chat",chatRoutes)
 app.use("/api/sessions",sessionRoutes)
-
-// Serve static files from the frontend build folder
-const __dirname = path.resolve();
-app.use(express.static(path.join(__dirname, '../../frontend/dist')));
-
-// Replace the wildcard route with app.use()
-app.use((req, res, next) => {
-  res.sendFile(path.join(__dirname, '../../frontend/dist/index.html'));
-});
-
-// Serve React app for unknown routes
-app.use((req, res) => {
-  res.sendFile(path.join(__dirname, '../../frontend/dist/index.html'));
-});
-
-// Test route
-app.get("/", (req, res) => {
-  res.status(200).json({ msg: "Success from api" });
-});
 
 // ✅ SINGLE server start
 const PORT = process.env.PORT || ENV.PORT || 3000;
