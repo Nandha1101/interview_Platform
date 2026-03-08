@@ -51,7 +51,7 @@ app.use((req, res, next) => {
 });
 
 // Serve React app for unknown routes
-app.all('*', (req, res) => {
+app.use((req, res) => {
   res.sendFile(path.join(__dirname, '../../frontend/dist/index.html'));
 });
 
