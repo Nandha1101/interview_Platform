@@ -11,7 +11,11 @@ function App() {
     const { isSignedIn ,isLoaded} = useUser();
      
     // this will get rid of flickering effect
-    if (!isLoaded) return null;
+    if (!isLoaded) return (
+      <div className="flex items-center justify-center h-screen bg-base-300">
+        <span className="loading loading-spinner loading-lg text-primary"></span>
+      </div>
+    );
     
   return (
     <>

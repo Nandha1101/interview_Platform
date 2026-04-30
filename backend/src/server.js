@@ -2,6 +2,8 @@ import express from "express";
 import dotenv from "dotenv";
 dotenv.config();
 import cors from "cors";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
 import { serve } from "inngest/express";
 import { clerkMiddleware } from '@clerk/express'
 import { connectDB } from "./lib/db.js";
@@ -20,6 +22,22 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 app.use(express.json());
+
+// Security headers
+app.use(helmet({
+  contentSecurityPolicy: false, // disable CSP for SPA compatibility
+  crossOriginEmbedderPolicy: false, // needed for Stream video SDK
+}));
+
+// Rate limiting for API routes
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: { message: "Too many requests, please try again later." },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use("/api", apiLimiter);
 app.use(cors({
   origin: (origin, callback) => {
     const allowedOrigins = [
@@ -62,6 +80,16 @@ app.get(/^(?!\/api\/).*$/, (req, res) => {
       console.error('Error sending index.html:', err);
       res.status(500).send('Error loading application');
     }
+  });
+});
+
+// Global error handler — catches unhandled errors from all routes
+app.use((err, req, res, next) => {
+  console.error("Unhandled error:", err.stack || err.message);
+  res.status(err.status || 500).json({
+    message: process.env.NODE_ENV === "production"
+      ? "Internal Server Error"
+      : err.message,
   });
 });
 
