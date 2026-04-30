@@ -11,8 +11,6 @@ import { executeCode } from "../lib/wandbox.js";
 
 import toast from "react-hot-toast";
 import confetti from "canvas-confetti";
-const result = await executeCode("python", 'print("Hello!")');
-
 
 function ProblemPage() {
   const { id } = useParams();

@@ -4,8 +4,6 @@ const router = express.Router();
 
 router.post("/", async (req, res) => {
   try {
-    console.log("Sending to Wandbox:", req.body); // add this
-
     const response = await fetch("https://wandbox.org/api/compile.json", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -13,7 +11,6 @@ router.post("/", async (req, res) => {
     });
 
     const text = await response.text(); // get raw text first
-    console.log("Raw Wandbox response:", text); // log it
 
     const data = JSON.parse(text);
     res.json(data);
