@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
-import { PROBLEMS } from "../data/problems";
+import { problemApi } from "../api/problems";
 import Navbar from "../components/Navbar";
 
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
@@ -16,28 +16,57 @@ function ProblemPage() {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const [currentProblemId, setCurrentProblemId] = useState("two-sum");
+  const [currentProblem, setCurrentProblem] = useState(null);
+  const [allProblems, setAllProblems] = useState([]);
   const [selectedLanguage, setSelectedLanguage] = useState("javascript");
-  const [code, setCode] = useState(PROBLEMS[currentProblemId].starterCode.javascript);
+  const [code, setCode] = useState("");
   const [output, setOutput] = useState(null);
   const [isRunning, setIsRunning] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const currentProblem = PROBLEMS[currentProblemId];
-
-  // update problem when URL param changes
+  // Load the list of all problems (for problem dropdown)
   useEffect(() => {
-    if (id && PROBLEMS[id]) {
-      setCurrentProblemId(id);
-      setCode(PROBLEMS[id].starterCode[selectedLanguage]);
+    const fetchAllProblems = async () => {
+      try {
+        const data = await problemApi.getProblems();
+        setAllProblems(data);
+      } catch (err) {
+        console.error("Failed to fetch problems list:", err);
+      }
+    };
+    fetchAllProblems();
+  }, []);
+
+  // Fetch the full details of the active problem by ID
+  useEffect(() => {
+    const fetchProblemDetails = async () => {
+      setIsLoading(true);
+      try {
+        const problemId = id || "two-sum";
+        const problemData = await problemApi.getProblemById(problemId);
+        setCurrentProblem(problemData);
+        setCode(problemData.starterCode[selectedLanguage]);
+        setOutput(null);
+      } catch (err) {
+        console.error("Failed to load problem details:", err);
+        toast.error("Failed to load problem details");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchProblemDetails();
+  }, [id]);
+
+  useEffect(() => {
+    if (currentProblem) {
+      setCode(currentProblem.starterCode[selectedLanguage]);
       setOutput(null);
     }
-  }, [id, selectedLanguage]);
+  }, [selectedLanguage]);
 
   const handleLanguageChange = (e) => {
     const newLang = e.target.value;
     setSelectedLanguage(newLang);
-    setCode(currentProblem.starterCode[newLang]);
-    setOutput(null);
   };
 
   const handleProblemChange = (newProblemId) => navigate(`/problem/${newProblemId}`);
@@ -106,6 +135,17 @@ function ProblemPage() {
     }
   };
 
+  if (isLoading || !currentProblem) {
+    return (
+      <div className="h-screen bg-base-100 flex flex-col">
+        <Navbar />
+        <div className="flex-1 flex items-center justify-center">
+          <span className="loading loading-spinner loading-lg text-primary"></span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="h-screen bg-base-100 flex flex-col">
       <Navbar />
@@ -116,9 +156,9 @@ function ProblemPage() {
           <Panel defaultSize={40} minSize={30}>
             <ProblemDescription
               problem={currentProblem}
-              currentProblemId={currentProblemId}
+              currentProblemId={currentProblem.id}
               onProblemChange={handleProblemChange}
-              allProblems={Object.values(PROBLEMS)}
+              allProblems={allProblems}
             />
           </Panel>
 

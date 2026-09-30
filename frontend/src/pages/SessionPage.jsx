@@ -2,14 +2,15 @@ import { useUser } from "@clerk/clerk-react";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { useEndSession, useJoinSession, useSessionById } from "../hooks/useSessions";
-import { PROBLEMS } from "../data/problems";
+import { problemApi } from "../api/problems";
 import { executeCode } from "../lib/wandbox";
 import Navbar from "../components/Navbar";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { getDifficultyBadgeClass } from "../lib/utils";
-import { Loader2Icon, LogOutIcon, PhoneOffIcon } from "lucide-react";
+import { Loader2Icon, LogOutIcon, PhoneOffIcon, Share2Icon, CopyIcon, MessageCircleIcon, MailIcon } from "lucide-react";
 import CodeEditorPanel from "../components/CodeEditorPanel";
 import OutputPanel from "../components/OutputPanel";
+import toast from "react-hot-toast";
 
 import useStreamClient from "../hooks/useStreamClient";
 import { StreamCall, StreamVideo } from "@stream-io/video-react-sdk";
@@ -21,6 +22,7 @@ function SessionPage() {
   const { user } = useUser();
   const [output, setOutput] = useState(null);
   const [isRunning, setIsRunning] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
 
   const { data: sessionData, isLoading: loadingSession, refetch } = useSessionById(id);
 
@@ -38,13 +40,28 @@ function SessionPage() {
     isParticipant
   );
 
-  // find the problem data based on session problem title
-  const problemData = session?.problem
-    ? Object.values(PROBLEMS).find((p) => p.title === session.problem)
-    : null;
-
   const [selectedLanguage, setSelectedLanguage] = useState("javascript");
-  const [code, setCode] = useState(problemData?.starterCode?.[selectedLanguage] || "");
+  const [code, setCode] = useState("");
+  const [problemData, setProblemData] = useState(null);
+  const [loadingProblem, setLoadingProblem] = useState(false);
+
+  // Fetch problem details dynamically in Room session
+  useEffect(() => {
+    if (session?.problem) {
+      const fetchProblemDetails = async () => {
+        setLoadingProblem(true);
+        try {
+          const data = await problemApi.getProblemByTitle(session.problem);
+          setProblemData(data);
+        } catch (error) {
+          console.error("Failed to fetch session problem details:", error);
+        } finally {
+          setLoadingProblem(false);
+        }
+      };
+      fetchProblemDetails();
+    }
+  }, [session?.problem]);
 
   // auto-join session if user is not already a participant and not the host
   useEffect(() => {
@@ -132,7 +149,16 @@ function SessionPage() {
                           {session?.difficulty.slice(0, 1).toUpperCase() +
                             session?.difficulty.slice(1) || "Easy"}
                         </span>
-                        {isHost && session?.status === "active" && (
+                        {session?.status === "active" && (
+                          <button
+                            onClick={() => setShowShareModal(true)}
+                            className="btn btn-primary btn-sm gap-2 animate-pulse hover:animate-none"
+                          >
+                            <Share2Icon className="w-4 h-4" />
+                            Share Link
+                          </button>
+                        )}
+                        {(isHost || isParticipant) && session?.status === "active" && (
                           <button
                             onClick={handleEndSession}
                             disabled={endSessionMutation.isPending}
@@ -289,6 +315,79 @@ function SessionPage() {
           </Panel>
         </PanelGroup>
       </div>
+
+      {/* SHARE MODAL */}
+      {showShareModal && (
+        <div className="modal modal-open z-[100]">
+          <div className="modal-box max-w-md">
+            <h3 className="font-bold text-2xl mb-4">Share Collaborative Room</h3>
+            <p className="text-base-content/75 mb-6">
+              Invite others to join the room! Anyone with this link can practice and video call with you.
+            </p>
+
+            <div className="space-y-4">
+              {/* Copyable Link Field */}
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  readOnly
+                  value={window.location.href}
+                  className="input input-bordered flex-1 font-mono text-sm"
+                  onClick={(e) => e.target.select()}
+                />
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(window.location.href);
+                    toast.success("Link copied to clipboard!");
+                  }}
+                  className="btn btn-secondary gap-2"
+                  title="Copy link"
+                >
+                  <CopyIcon className="w-4 h-4" />
+                  Copy
+                </button>
+              </div>
+
+              <div className="divider">Share via</div>
+
+              <div className="grid grid-cols-2 gap-3">
+                {/* Whatsapp */}
+                <a
+                  href={`https://api.whatsapp.com/send?text=${encodeURIComponent(
+                    `Join my collaborative coding and interview session for "${session?.problem}" on Talent IQ! Learn and code together. Link: ${window.location.href}`
+                  )}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn bg-[#25D366] hover:bg-[#20ba59] border-none text-white gap-2 font-medium"
+                >
+                  <MessageCircleIcon className="w-5 h-5 fill-white text-[#25D366]" />
+                  WhatsApp
+                </a>
+
+                {/* Email */}
+                <a
+                  href={`mailto:?subject=${encodeURIComponent(
+                    `Join my coding room on Talent IQ`
+                  )}&body=${encodeURIComponent(
+                    `Hey!\n\nI created a live coding room to solve "${session?.problem}" on Talent IQ.\n\nJoin the session and let's pair-program together: ${window.location.href}`
+                  )}`}
+                  className="btn bg-base-300 hover:bg-base-200 border-none text-base-content gap-2 font-medium"
+                >
+                  <MailIcon className="w-5 h-5" />
+                  Email
+                </a>
+              </div>
+            </div>
+
+            <div className="modal-action">
+              <button className="btn btn-ghost" onClick={() => setShowShareModal(false)}>
+                Close
+              </button>
+            </div>
+          </div>
+          <div className="modal-backdrop" onClick={() => setShowShareModal(false)}></div>
+        </div>
+      )}
     </div>
   );
 }

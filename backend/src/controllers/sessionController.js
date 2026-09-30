@@ -57,7 +57,8 @@ export async function getActiveSessions(_, res) {
       .populate("host", "name profileImage email clerkId")
       .populate("participant", "name profileImage email clerkId")
       .sort({ createdAt: -1 })
-      .limit(20);
+      .limit(20)
+      .lean();
 
     res.status(200).json({ sessions });
   } catch (error) {
@@ -76,7 +77,8 @@ export async function getMyRecentSessions(req, res) {
       $or: [{ host: userId }, { participant: userId }],
     })
       .sort({ createdAt: -1 })
-      .limit(20);
+      .limit(20)
+      .lean();
 
     res.status(200).json({ sessions });
   } catch (error) {
@@ -91,7 +93,8 @@ export async function getSessionById(req, res) {
 
     const session = await Session.findById(id)
       .populate("host", "name email profileImage clerkId")
-      .populate("participant", "name email profileImage clerkId");
+      .populate("participant", "name email profileImage clerkId")
+      .lean();
 
     if (!session) return res.status(404).json({ message: "Session not found" });
 
@@ -145,9 +148,12 @@ export async function endSession(req, res) {
 
     if (!session) return res.status(404).json({ message: "Session not found" });
 
-    // check if user is the host
-    if (session.host.toString() !== userId.toString()) {
-      return res.status(403).json({ message: "Only the host can end the session" });
+    // check if user is either the host or the participant
+    const isHost = session.host.toString() === userId.toString();
+    const isParticipant = session.participant && session.participant.toString() === userId.toString();
+
+    if (!isHost && !isParticipant) {
+      return res.status(403).json({ message: "Only session participants can end the session" });
     }
 
     // check if session is already completed

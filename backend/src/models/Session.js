@@ -31,5 +31,11 @@ const sessionSchema = new mongoose.Schema({
     }
 },{timestamps:true}
 );
+
+// Indexes for faster queries
+sessionSchema.index({ status: 1, createdAt: -1 });
+sessionSchema.index({ host: 1 });
+sessionSchema.index({ participant: 1 });
+
 const Session = mongoose.model("Session",sessionSchema);
 export default Session
