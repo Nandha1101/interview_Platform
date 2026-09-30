@@ -1,5 +1,6 @@
+import { useEffect, useState } from "react";
 import { Code2Icon, LoaderIcon, PlusIcon } from "lucide-react";
-import { PROBLEMS } from "../data/problems";
+import { problemApi } from "../api/problems";
 
 function CreateSessionModal({
   isOpen,
@@ -9,7 +10,25 @@ function CreateSessionModal({
   onCreateRoom,
   isCreating,
 }) {
-  const problems = Object.values(PROBLEMS);
+  const [problems, setProblems] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      const fetchProblems = async () => {
+        setIsLoading(true);
+        try {
+          const data = await problemApi.getProblems();
+          setProblems(data);
+        } catch (error) {
+          console.error("Error loading problems for modal:", error);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+      fetchProblems();
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -31,14 +50,17 @@ function CreateSessionModal({
               value={roomConfig.problem}
               onChange={(e) => {
                 const selectedProblem = problems.find((p) => p.title === e.target.value);
-                setRoomConfig({
-                  difficulty: selectedProblem.difficulty,
-                  problem: e.target.value,
-                });
+                if (selectedProblem) {
+                  setRoomConfig({
+                    difficulty: selectedProblem.difficulty,
+                    problem: e.target.value,
+                  });
+                }
               }}
+              disabled={isLoading}
             >
               <option value="" disabled>
-                Choose a coding problem...
+                {isLoading ? "Loading problems..." : "Choose a coding problem..."}
               </option>
 
               {problems.map((problem) => (

@@ -12,6 +12,8 @@ import { ENV } from "./lib/env.js";
 import chatRoutes from "./routes/chatRoutes.js";
 import sessionRoutes from "./routes/sessionRoute.js";
 import executeRoute from "./routes/executeRoute.js";
+import problemRoutes from "./routes/problemRoutes.js";
+import { seedProblems } from "./lib/seedProblems.js";
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -32,7 +34,7 @@ app.use(helmet({
 // Rate limiting for API routes
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
+  max: 500, // limit each IP to 500 requests per windowMs
   message: { message: "Too many requests, please try again later." },
   standardHeaders: true,
   legacyHeaders: false,
@@ -69,6 +71,7 @@ app.use(
 );
 app.use("/api/chat",chatRoutes)
 app.use("/api/sessions",sessionRoutes)
+app.use("/api/problems", problemRoutes)
 
 // Serve static files from the frontend build folder
 app.use(express.static(path.join(__dirname, '../../frontend/dist')));
@@ -99,6 +102,7 @@ const PORT = process.env.PORT || ENV.PORT || 3000;
 const startServer = async () => {
   try {
     await connectDB();
+    await seedProblems();
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
     });

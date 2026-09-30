@@ -1,12 +1,39 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import Navbar from "../components/Navbar";
 
-import { PROBLEMS } from "../data/problems";
+import { problemApi } from "../api/problems";
 import { ChevronRightIcon, Code2Icon } from "lucide-react";
 import { getDifficultyBadgeClass } from "../lib/utils";
 
 function ProblemsPage() {
-  const problems = Object.values(PROBLEMS);
+  const [problems, setProblems] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProblems = async () => {
+      try {
+        const data = await problemApi.getProblems();
+        setProblems(data);
+      } catch (error) {
+        console.error("Error loading problems:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchProblems();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-base-200">
+        <Navbar />
+        <div className="flex items-center justify-center h-[calc(100vh-64px)]">
+          <span className="loading loading-spinner loading-lg text-primary"></span>
+        </div>
+      </div>
+    );
+  }
 
   const easyProblemsCount = problems.filter((p) => p.difficulty === "Easy").length;
   const mediumProblemsCount = problems.filter((p) => p.difficulty === "Medium").length;
